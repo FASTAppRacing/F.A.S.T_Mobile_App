@@ -143,7 +143,7 @@
             }
             
             // 1. Check if the session exists before connecting
-            const sessionRef = db.ref('courses/' + inputId);
+            const sessionRef = db.ref('Users/' + inputId);
             sessionRef.once('value', (snapshot) => {
                 if (snapshot.exists()) {
                     // Session exists, start listening for data
@@ -168,8 +168,8 @@
         // 4. REAL-TIME LISTENER (onSnapshot) - FIXED KEYS
         // ---------------------------------------------------------
         function startDataListener(sessionId) {
-            // Target the exact path where the PC sends data: /courses/[ID]/telemetry
-            const telemetryRef = db.ref('courses/' + sessionId + '/telemetry'); 
+            // Target the exact path where the PC sends data: /Users/[ID]/telemetry
+            const telemetryRef = db.ref('Users/' + sessionId + '/telemetry'); 
 
             // 'on' sets up the real-time listener. This function runs every time the data changes.
             dataListener = telemetryRef.on('value', (snapshot) => {
@@ -209,7 +209,7 @@
         function handleDisconnect() {
             if (dataListener) {
                 // Remove the listener to save battery and bandwidth
-                db.ref('courses/' + currentSessionId + '/telemetry').off('value', dataListener);
+                db.ref('Users/' + currentSessionId + '/telemetry').off('value', dataListener);
                 dataListener = null;
             }
 
