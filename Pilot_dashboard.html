@@ -91,7 +91,7 @@ html, body {
     </div>
 
     <!-- MESSAGE TO PILOT -->
-    <div id="messageCard" class="card">
+    <div class="card">
         <div class="text-sm uppercase text-gray-400 mb-1">
             Message to pilot
         </div>
@@ -129,7 +129,7 @@ const db = firebase.database();
 /* ---------------------------------------------------- */
 let sessionId = null;
 let lastData = null;
-let listener = null;
+let dataRef = null;
 
 /* ---------------------------------------------------- */
 /* DOM                                                  */
@@ -203,9 +203,13 @@ window.addEventListener("load", () => {
 /* LISTENER                                             */
 /* ---------------------------------------------------- */
 function startListener() {
-    const ref = db.ref(`Users/${sessionId}/data`);
+    if (dataRef) {
+        dataRef.off();
+    }
 
-    listener = ref.on("value", snap => {
+    dataRef = db.ref(`Users/${sessionId}/data`);
+
+    dataRef.on("value", snap => {
         const data = snap.val();
         if (!data) return;
 
@@ -229,15 +233,10 @@ function updateTrack(track) {
 
     trackDot.className = "dot";
 
-    if (status === "GREEN") {
-        trackDot.classList.add("bg-green-500");
-    } else if (status === "FCY") {
-        trackDot.classList.add("bg-yellow-400");
-    } else if (status === "RED FLAG") {
-        trackDot.classList.add("bg-red-500");
-    } else {
-        trackDot.classList.add("bg-gray-500");
-    }
+    if (status === "GREEN") trackDot.classList.add("bg-green-500");
+    else if (status === "FCY") trackDot.classList.add("bg-yellow-400");
+    else if (status === "RED FLAG") trackDot.classList.add("bg-red-500");
+    else trackDot.classList.add("bg-gray-500");
 }
 
 /* ---------------------------------------------------- */
@@ -268,11 +267,10 @@ function updatePit(pit) {
 /* MESSAGE TO PILOT                                     */
 /* ---------------------------------------------------- */
 function updateMessage(msg) {
-    const text = msg?.message;
-
-    pilotMessage.textContent = text && text.trim()
-        ? text
-        : "No message";
+    pilotMessage.textContent =
+        msg?.message && msg.message.trim()
+            ? msg.message
+            : "No message";
 }
 
 /* ---------------------------------------------------- */
@@ -322,8 +320,9 @@ function updateDrivers(drivers) {
 /* DISCONNECT                                           */
 /* ---------------------------------------------------- */
 document.getElementById("disconnectBtn").onclick = () => {
-    if (listener) {
-        db.ref(`Users/${sessionId}/data`).off("value", listener);
+    if (dataRef) {
+        dataRef.off();
+        dataRef = null;
     }
 
     localStorage.removeItem("FAST_SESSION");
