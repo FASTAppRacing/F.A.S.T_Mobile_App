@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>FAST Driver Dashboard</title>
+<title>FAST Dashboard</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -20,6 +20,12 @@ html, body {
     border-radius: 1rem;
     padding: 1rem;
     box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+.dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
 }
 
 .flash-green { animation: flashGreen 0.6s ease-out; }
@@ -41,7 +47,7 @@ html, body {
 </style>
 </head>
 
-<body class="flex flex-col items-center p-4 text-white">
+<body class="flex flex-col items-center p-4 text-white overscroll-none">
 
 <!-- LOGIN -->
 <div id="login" class="w-full max-w-sm mt-24">
@@ -58,8 +64,6 @@ html, body {
             class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold">
             Connect
         </button>
-
-        <p id="error" class="text-red-400 text-center mt-3 hidden"></p>
     </div>
 </div>
 
@@ -70,11 +74,30 @@ html, body {
         Session <span id="sessionLabel" class="text-yellow-400 font-mono"></span>
     </div>
 
+    <!-- TRACK STATUS -->
+    <div class="card flex items-center justify-between">
+        <div class="text-sm uppercase text-gray-400">Track status</div>
+        <div class="flex items-center gap-2">
+            <div id="trackDot" class="dot bg-gray-500"></div>
+            <div id="trackLabel" class="font-bold">UNKNOWN</div>
+        </div>
+    </div>
+
     <!-- PIT -->
     <div id="pitCard" class="card text-center">
         <div class="text-sm uppercase text-gray-400">Pit Window</div>
         <div id="pitStatus" class="text-3xl font-extrabold mt-1">UNKNOWN</div>
         <div id="pitTime" class="text-sm text-gray-400 mt-1"></div>
+    </div>
+
+    <!-- MESSAGE TO PILOT -->
+    <div id="messageCard" class="card">
+        <div class="text-sm uppercase text-gray-400 mb-1">
+            Message to pilot
+        </div>
+        <div id="pilotMessage" class="text-lg font-mono text-gray-300">
+            No message
+        </div>
     </div>
 
     <!-- DRIVERS -->
@@ -119,6 +142,11 @@ const pitCard   = document.getElementById("pitCard");
 const pitStatus = document.getElementById("pitStatus");
 const pitTime   = document.getElementById("pitTime");
 
+const trackDot   = document.getElementById("trackDot");
+const trackLabel = document.getElementById("trackLabel");
+
+const pilotMessage = document.getElementById("pilotMessage");
+
 /* ---------------------------------------------------- */
 /* HELPERS                                              */
 /* ---------------------------------------------------- */
@@ -146,13 +174,30 @@ document.getElementById("connectBtn").onclick = () => {
     if (id.length !== 4) return;
 
     sessionId = id;
-    document.getElementById("sessionLabel").textContent = id;
+    localStorage.setItem("FAST_SESSION", id);
 
+    document.getElementById("sessionLabel").textContent = id;
     login.classList.add("hidden");
     dashboard.classList.remove("hidden");
 
     startListener();
 };
+
+/* ---------------------------------------------------- */
+/* AUTO RECONNECT                                       */
+/* ---------------------------------------------------- */
+window.addEventListener("load", () => {
+    const saved = localStorage.getItem("FAST_SESSION");
+    if (!saved) return;
+
+    sessionId = saved;
+    document.getElementById("sessionLabel").textContent = saved;
+
+    login.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+
+    startListener();
+});
 
 /* ---------------------------------------------------- */
 /* LISTENER                                             */
@@ -164,7 +209,9 @@ function startListener() {
         const data = snap.val();
         if (!data) return;
 
+        updateTrack(data.track_status);
         updatePit(data.pit);
+        updateMessage(data.message);
         updateDrivers(data.drivers);
 
         lastData = data;
@@ -172,7 +219,29 @@ function startListener() {
 }
 
 /* ---------------------------------------------------- */
-/* PIT UPDATE                                           */
+/* TRACK STATUS                                         */
+/* ---------------------------------------------------- */
+function updateTrack(track) {
+    if (!track) return;
+
+    const status = track.track_status ?? "UNKNOWN";
+    trackLabel.textContent = status;
+
+    trackDot.className = "dot";
+
+    if (status === "GREEN") {
+        trackDot.classList.add("bg-green-500");
+    } else if (status === "FCY") {
+        trackDot.classList.add("bg-yellow-400");
+    } else if (status === "RED FLAG") {
+        trackDot.classList.add("bg-red-500");
+    } else {
+        trackDot.classList.add("bg-gray-500");
+    }
+}
+
+/* ---------------------------------------------------- */
+/* PIT                                                  */
 /* ---------------------------------------------------- */
 function updatePit(pit) {
     if (!pit) return;
@@ -196,7 +265,18 @@ function updatePit(pit) {
 }
 
 /* ---------------------------------------------------- */
-/* DRIVERS UPDATE                                       */
+/* MESSAGE TO PILOT                                     */
+/* ---------------------------------------------------- */
+function updateMessage(msg) {
+    const text = msg?.message;
+
+    pilotMessage.textContent = text && text.trim()
+        ? text
+        : "No message";
+}
+
+/* ---------------------------------------------------- */
+/* DRIVERS                                              */
 /* ---------------------------------------------------- */
 function updateDrivers(drivers) {
     if (!drivers) return;
@@ -245,6 +325,8 @@ document.getElementById("disconnectBtn").onclick = () => {
     if (listener) {
         db.ref(`Users/${sessionId}/data`).off("value", listener);
     }
+
+    localStorage.removeItem("FAST_SESSION");
 
     sessionId = null;
     lastData = null;
