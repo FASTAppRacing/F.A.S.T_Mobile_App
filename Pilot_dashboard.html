@@ -15,7 +15,6 @@ html, body {
     font-family: Inter, system-ui, sans-serif;
 }
 
-/* ---- Cards ---- */
 .card {
     background-color: #1f2933;
     border-radius: 1rem;
@@ -23,16 +22,9 @@ html, body {
     box-shadow: 0 8px 24px rgba(0,0,0,0.35);
 }
 
-/* ---- Animations ---- */
-.flash-green {
-    animation: flashGreen 0.6s ease-out;
-}
-.flash-red {
-    animation: flashRed 0.6s ease-out;
-}
-.flash-yellow {
-    animation: flashYellow 0.6s ease-out;
-}
+.flash-green { animation: flashGreen 0.6s ease-out; }
+.flash-red   { animation: flashRed 0.6s ease-out; }
+.flash-yellow{ animation: flashYellow 0.6s ease-out; }
 
 @keyframes flashGreen {
     0% { background-color: #064e3b; }
@@ -53,16 +45,20 @@ html, body {
 
 <!-- LOGIN -->
 <div id="login" class="w-full max-w-sm mt-24">
-    <h1 class="text-3xl font-bold text-center text-yellow-400 mb-6">FAST Dashboard</h1>
+    <h1 class="text-3xl font-bold text-center text-yellow-400 mb-6">
+        FAST Dashboard
+    </h1>
 
     <div class="card">
         <input id="sessionInput" maxlength="4"
             class="w-full p-3 mb-4 text-center text-2xl uppercase font-mono bg-gray-700 rounded-lg"
             placeholder="A7B2">
+
         <button id="connectBtn"
             class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold">
             Connect
         </button>
+
         <p id="error" class="text-red-400 text-center mt-3 hidden"></p>
     </div>
 </div>
@@ -118,29 +114,35 @@ let listener = null;
 const login = document.getElementById("login");
 const dashboard = document.getElementById("dashboard");
 const driversDiv = document.getElementById("drivers");
-const pitCard = document.getElementById("pitCard");
+
+const pitCard   = document.getElementById("pitCard");
 const pitStatus = document.getElementById("pitStatus");
-const pitTime = document.getElementById("pitTime");
+const pitTime   = document.getElementById("pitTime");
 
 /* ---------------------------------------------------- */
 /* HELPERS                                              */
 /* ---------------------------------------------------- */
-function flash(el, type) {
-    el.classList.remove(type);
-    void el.offsetWidth; // reflow
-    el.classList.add(type);
+function flash(el, cls) {
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
 }
 
 function fmtTime(iso) {
     if (!iso) return "";
-    return new Date(iso).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    return new Date(iso).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
 }
 
 /* ---------------------------------------------------- */
 /* CONNECT                                              */
 /* ---------------------------------------------------- */
 document.getElementById("connectBtn").onclick = () => {
-    const id = document.getElementById("sessionInput").value.trim().toUpperCase();
+    const id = document.getElementById("sessionInput")
+        .value.trim().toUpperCase();
+
     if (id.length !== 4) return;
 
     sessionId = id;
@@ -176,10 +178,11 @@ function updatePit(pit) {
     if (!pit) return;
 
     const open = pit.status === true;
+
     pitStatus.textContent = open ? "OPEN" : "CLOSED";
-    pitStatus.className = open
-        ? "text-3xl font-extrabold text-green-400"
-        : "text-3xl font-extrabold text-red-400";
+    pitStatus.className =
+        "text-3xl font-extrabold " +
+        (open ? "text-green-400" : "text-red-400");
 
     pitTime.textContent = open && pit.close_at
         ? "Closes at " + fmtTime(pit.close_at)
@@ -207,17 +210,20 @@ function updateDrivers(drivers) {
         card.className = "card";
 
         card.innerHTML = `
-            <div class="flex justify-between">
-                <span class="font-bold text-yellow-400">${d.name}</span>
-                <span class="text-sm text-gray-400">Stints ${d.stints_done}</span>
+            <div class="flex justify-between items-center">
+                <span class="font-bold text-yellow-400">
+                    ${d.name ?? id}
+                </span>
+                <span class="text-sm text-gray-400">
+                    Stints ${d.stints_done ?? 0}
+                </span>
             </div>
+
             <div class="flex justify-between mt-2 text-sm">
                 <span>Best lap</span>
-                <span class="font-mono text-green-400">${d.best_lap ?? "--"}</span>
-            </div>
-            <div class="flex justify-between text-sm">
-                <span>Time driven</span>
-                <span class="font-mono">${d.time_driven}</span>
+                <span class="font-mono text-green-400">
+                    ${d.best_lap ?? "--"}
+                </span>
             </div>
         `;
 
@@ -239,9 +245,11 @@ document.getElementById("disconnectBtn").onclick = () => {
     if (listener) {
         db.ref(`Users/${sessionId}/data`).off("value", listener);
     }
+
     sessionId = null;
     lastData = null;
     driversDiv.innerHTML = "";
+
     dashboard.classList.add("hidden");
     login.classList.remove("hidden");
 };
