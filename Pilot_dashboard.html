@@ -1,230 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Driver Dashboard - FAST Mobile App</title>
-    <!-- Using Tailwind CSS for a responsive and modern design -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Ensure content uses full screen height on mobile */
-        html, body {
-            height: 100%;
-            margin: 0;
-            overflow: hidden; 
-            font-family: 'Inter', sans-serif;
-        }
-        .data-card {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-        }
-        .data-value {
-            line-height: 1; /* Optimizing line height for the large number */
-            font-weight: 800;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FAST Driver Dashboard</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+html, body {
+    height: 100%;
+    margin: 0;
+    background-color: #111827;
+    font-family: Inter, system-ui, sans-serif;
+}
+
+/* ---- Cards ---- */
+.card {
+    background-color: #1f2933;
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+/* ---- Animations ---- */
+.flash-green {
+    animation: flashGreen 0.6s ease-out;
+}
+.flash-red {
+    animation: flashRed 0.6s ease-out;
+}
+.flash-yellow {
+    animation: flashYellow 0.6s ease-out;
+}
+
+@keyframes flashGreen {
+    0% { background-color: #064e3b; }
+    100% { background-color: #1f2933; }
+}
+@keyframes flashRed {
+    0% { background-color: #7f1d1d; }
+    100% { background-color: #1f2933; }
+}
+@keyframes flashYellow {
+    0% { background-color: #78350f; }
+    100% { background-color: #1f2933; }
+}
+</style>
 </head>
-<body class="bg-gray-900 text-white flex flex-col items-center justify-start min-h-screen p-4">
 
-    <!-- Login Screen (displayed by default) -->
-    <div id="loginScreen" class="w-full max-w-md mt-16">
-        <h1 class="text-3xl font-bold text-center text-yellow-400 mb-6">FAST Driver Dashboard</h1>
-        <div class="bg-gray-800 p-6 rounded-xl data-card">
-            <label for="sessionId" class="block text-sm font-medium text-gray-300 mb-2">Enter Session Code (4 characters):</label>
-            <input type="text" id="sessionId" maxlength="4" placeholder="Ex: A7B2" class="w-full p-3 mb-4 text-center text-2xl font-mono uppercase tracking-widest bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-yellow-400">
-            <button id="connectButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition duration-150">
-                Connect and Start
-            </button>
-            <p id="errorMsg" class="text-red-400 text-center mt-4 hidden">Invalid Code. Please try again.</p>
-        </div>
-    </div>
+<body class="flex flex-col items-center p-4 text-white">
 
-    <!-- Dashboard Screen (displayed after connection) -->
-    <div id="dashboard" class="w-full max-w-3xl hidden flex flex-col items-center justify-center p-4">
-        
-        <div class="mb-6 text-center">
-            <h2 class="text-xl font-semibold text-gray-300">Session ID: <span id="displaySessionId" class="text-yellow-400 font-mono text-2xl"></span></h2>
-        </div>
+<!-- LOGIN -->
+<div id="login" class="w-full max-w-sm mt-24">
+    <h1 class="text-3xl font-bold text-center text-yellow-400 mb-6">FAST Dashboard</h1>
 
-        <!-- Indicators Grid -->
-        <div class="grid grid-cols-2 gap-4 w-full">
-            
-            <!-- Speed -->
-            <div class="data-card bg-gray-800 p-5 rounded-xl text-center">
-                <p class="text-sm uppercase text-gray-400 mb-1">Current Speed (KM/H)</p>
-                <div id="speedValue" class="data-value text-7xl md:text-8xl text-red-500 animate-pulse">0</div>
-            </div>
-
-            <!-- RPM -->
-            <div class="data-card bg-gray-800 p-5 rounded-xl text-center">
-                <p class="text-sm uppercase text-gray-400 mb-1">Engine RPM</p>
-                <div id="rpmValue" class="data-value text-7xl md:text-8xl text-blue-500">0</div>
-            </div>
-
-            <!-- Lap -->
-            <div class="data-card bg-gray-800 p-5 rounded-xl text-center col-span-2">
-                <p class="text-sm uppercase text-gray-400 mb-1">Current Lap</p>
-                <div id="lapValue" class="data-value text-8xl md:text-9xl text-green-500">0</div>
-            </div>
-            
-        </div>
-
-        <!-- Disconnect Button -->
-        <button id="disconnectButton" class="mt-8 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 text-sm">
-            Disconnect
+    <div class="card">
+        <input id="sessionInput" maxlength="4"
+            class="w-full p-3 mb-4 text-center text-2xl uppercase font-mono bg-gray-700 rounded-lg"
+            placeholder="A7B2">
+        <button id="connectBtn"
+            class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold">
+            Connect
         </button>
+        <p id="error" class="text-red-400 text-center mt-3 hidden"></p>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden w-full max-w-xl space-y-4">
+
+    <div class="text-center text-gray-400">
+        Session <span id="sessionLabel" class="text-yellow-400 font-mono"></span>
     </div>
 
-    <!-- Firebase Scripts -->
-    <!-- We use the compatibility version for simplicity -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    
-    <script>
-        // ---------------------------------------------------------
-        // 1. FIREBASE CONFIGURATION (Must match your Python .exe config)
-        // ---------------------------------------------------------
-        const firebaseConfig = {
-            apiKey: "AIzaSyDY9ceRQr2KYQvEdzmUMypo5fcpAeivzAY",
-            authDomain: "fast-mobile-app-001.firebaseapp.com",
-            databaseURL: "https://fast-mobile-app-001-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "fast-mobile-app-001",
-            storageBucket: "fast-mobile-app-001.firebasestorage.app",
-            messagingSenderId: "503921954998",
-            appId: "1:503921954998:web:afced2b8ef8a3c789a1617"
-        };
+    <!-- PIT -->
+    <div id="pitCard" class="card text-center">
+        <div class="text-sm uppercase text-gray-400">Pit Window</div>
+        <div id="pitStatus" class="text-3xl font-extrabold mt-1">UNKNOWN</div>
+        <div id="pitTime" class="text-sm text-gray-400 mt-1"></div>
+    </div>
 
-        // ---------------------------------------------------------
-        // 2. GLOBAL VARIABLES AND INITIALIZATION
-        // ---------------------------------------------------------
-        let app;
-        let db;
-        let currentSessionId = null;
-        let dataListener = null; // Stores the reference to the Firebase real-time listener
+    <!-- DRIVERS -->
+    <div id="drivers" class="space-y-3"></div>
 
-        // DOM References
-        const loginScreen = document.getElementById('loginScreen');
-        const dashboard = document.getElementById('dashboard');
-        const connectButton = document.getElementById('connectButton');
-        const disconnectButton = document.getElementById('disconnectButton');
-        const sessionIdInput = document.getElementById('sessionId');
-        const errorMsg = document.getElementById('errorMsg');
-        const speedValue = document.getElementById('speedValue');
-        const rpmValue = document.getElementById('rpmValue');
-        const lapValue = document.getElementById('lapValue');
-        const displaySessionId = document.getElementById('displaySessionId');
+    <button id="disconnectBtn"
+        class="mt-4 bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-sm">
+        Disconnect
+    </button>
+</div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
-        // Initialize Firebase once the DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                app = firebase.initializeApp(firebaseConfig);
-                db = app.database();
-                console.log("Firebase initialized.");
-            } catch (e) {
-                console.error("Firebase initialization error:", e);
-                errorMsg.textContent = "Could not connect to the service. Check your connection.";
-                errorMsg.classList.remove('hidden');
-                connectButton.disabled = true;
-            }
-        });
+<script>
+/* ---------------------------------------------------- */
+/* FIREBASE CONFIG                                      */
+/* ---------------------------------------------------- */
+firebase.initializeApp({
+    apiKey: "AIzaSyDY9ceRQr2KYQvEdzmUMypo5fcpAeivzAY",
+    authDomain: "fast-mobile-app-001.firebaseapp.com",
+    databaseURL: "https://fast-mobile-app-001-default-rtdb.europe-west1.firebasedatabase.app"
+});
+const db = firebase.database();
 
-        // ---------------------------------------------------------
-        // 3. CONNECTION LOGIC
-        // ---------------------------------------------------------
-        connectButton.addEventListener('click', () => {
-            // Get input, trim spaces, convert to uppercase
-            const inputId = sessionIdInput.value.trim().toUpperCase();
-            
-            if (inputId.length !== 4) {
-                errorMsg.textContent = "Code must be 4 characters long.";
-                errorMsg.classList.remove('hidden');
-                return;
-            }
-            
-            // 1. Check if the session exists before connecting
-            const sessionRef = db.ref('Users/' + inputId);
-            sessionRef.once('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    // Session exists, start listening for data
-                    currentSessionId = inputId;
-                    startDataListener(inputId);
-                    
-                    // Switch UI
-                    loginScreen.classList.add('hidden');
-                    dashboard.classList.remove('hidden');
-                    displaySessionId.textContent = inputId;
-                    errorMsg.classList.add('hidden');
+/* ---------------------------------------------------- */
+/* STATE                                                */
+/* ---------------------------------------------------- */
+let sessionId = null;
+let lastData = null;
+let listener = null;
 
-                } else {
-                    // Session not found (wrong code or PC is offline)
-                    errorMsg.textContent = "Session not found. PC must be actively sending data.";
-                    errorMsg.classList.remove('hidden');
-                }
-            });
-        });
+/* ---------------------------------------------------- */
+/* DOM                                                  */
+/* ---------------------------------------------------- */
+const login = document.getElementById("login");
+const dashboard = document.getElementById("dashboard");
+const driversDiv = document.getElementById("drivers");
+const pitCard = document.getElementById("pitCard");
+const pitStatus = document.getElementById("pitStatus");
+const pitTime = document.getElementById("pitTime");
 
-        // ---------------------------------------------------------
-        // 4. REAL-TIME LISTENER (onSnapshot) - FIXED KEYS
-        // ---------------------------------------------------------
-        function startDataListener(sessionId) {
-            // Target the exact path where the PC sends data: /Users/[ID]/telemetry
-            const telemetryRef = db.ref('Users/' + sessionId + '/telemetry'); 
+/* ---------------------------------------------------- */
+/* HELPERS                                              */
+/* ---------------------------------------------------- */
+function flash(el, type) {
+    el.classList.remove(type);
+    void el.offsetWidth; // reflow
+    el.classList.add(type);
+}
 
-            // 'on' sets up the real-time listener. This function runs every time the data changes.
-            dataListener = telemetryRef.on('value', (snapshot) => {
-                const data = snapshot.val();
+function fmtTime(iso) {
+    if (!iso) return "";
+    return new Date(iso).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
 
-                if (data) {
-                    // Update the UI using the correct keys: 'speed', 'lap', 'rpm'
-                    speedValue.textContent = data.speed !== undefined ? Math.round(data.speed) : 0;
-                    rpmValue.textContent = data.rpm !== undefined ? Math.round(data.rpm) : 0;
-                    lapValue.textContent = data.lap !== undefined ? Math.round(data.lap) : 0;
-                    
-                    // Remove the pulse effect when data is received
-                    speedValue.classList.remove('animate-pulse');
+/* ---------------------------------------------------- */
+/* CONNECT                                              */
+/* ---------------------------------------------------- */
+document.getElementById("connectBtn").onclick = () => {
+    const id = document.getElementById("sessionInput").value.trim().toUpperCase();
+    if (id.length !== 4) return;
 
-                } else {
-                    console.warn("Telemetry data is empty or corrupted.");
-                    // Display zeros if data is suddenly empty
-                    speedValue.textContent = 0;
-                    rpmValue.textContent = 0;
-                    lapValue.textContent = 0;
-                    speedValue.classList.add('animate-pulse'); // Start pulsing again to indicate waiting
-                }
-            }, (error) => {
-                // Handle listener errors (e.g., security issues)
-                console.error("Firebase Listener Error:", error);
-                // We use custom UI/console log instead of alert()
-                console.log("Real-time connection error. Please reconnect.");
-                handleDisconnect();
-            });
+    sessionId = id;
+    document.getElementById("sessionLabel").textContent = id;
+
+    login.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+
+    startListener();
+};
+
+/* ---------------------------------------------------- */
+/* LISTENER                                             */
+/* ---------------------------------------------------- */
+function startListener() {
+    const ref = db.ref(`Users/${sessionId}/data`);
+
+    listener = ref.on("value", snap => {
+        const data = snap.val();
+        if (!data) return;
+
+        updatePit(data.pit);
+        updateDrivers(data.drivers);
+
+        lastData = data;
+    });
+}
+
+/* ---------------------------------------------------- */
+/* PIT UPDATE                                           */
+/* ---------------------------------------------------- */
+function updatePit(pit) {
+    if (!pit) return;
+
+    const open = pit.status === true;
+    pitStatus.textContent = open ? "OPEN" : "CLOSED";
+    pitStatus.className = open
+        ? "text-3xl font-extrabold text-green-400"
+        : "text-3xl font-extrabold text-red-400";
+
+    pitTime.textContent = open && pit.close_at
+        ? "Closes at " + fmtTime(pit.close_at)
+        : !open && pit.open_at
+        ? "Opens at " + fmtTime(pit.open_at)
+        : "";
+
+    if (!lastData || pit.status !== lastData.pit?.status) {
+        flash(pitCard, open ? "flash-green" : "flash-red");
+    }
+}
+
+/* ---------------------------------------------------- */
+/* DRIVERS UPDATE                                       */
+/* ---------------------------------------------------- */
+function updateDrivers(drivers) {
+    if (!drivers) return;
+
+    driversDiv.innerHTML = "";
+
+    Object.entries(drivers).forEach(([id, d]) => {
+        const prev = lastData?.drivers?.[id];
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+            <div class="flex justify-between">
+                <span class="font-bold text-yellow-400">${d.name}</span>
+                <span class="text-sm text-gray-400">Stints ${d.stints_done}</span>
+            </div>
+            <div class="flex justify-between mt-2 text-sm">
+                <span>Best lap</span>
+                <span class="font-mono text-green-400">${d.best_lap ?? "--"}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span>Time driven</span>
+                <span class="font-mono">${d.time_driven}</span>
+            </div>
+        `;
+
+        if (!prev || d.best_lap !== prev.best_lap) {
+            flash(card, "flash-green");
+        }
+        if (prev && d.stints_done !== prev.stints_done) {
+            flash(card, "flash-yellow");
         }
 
-        // ---------------------------------------------------------
-        // 5. DISCONNECTION LOGIC
-        // ---------------------------------------------------------
-        disconnectButton.addEventListener('click', handleDisconnect);
+        driversDiv.appendChild(card);
+    });
+}
 
-        function handleDisconnect() {
-            if (dataListener) {
-                // Remove the listener to save battery and bandwidth
-                db.ref('Users/' + currentSessionId + '/telemetry').off('value', dataListener);
-                dataListener = null;
-            }
-
-            // Reset the interface
-            dashboard.classList.add('hidden');
-            loginScreen.classList.remove('hidden');
-            sessionIdInput.value = '';
-            currentSessionId = null;
-            
-            // Reset displays to zero
-            speedValue.textContent = 0;
-            rpmValue.textContent = 0;
-            lapValue.textContent = 0;
-        }
-
-    </script>
+/* ---------------------------------------------------- */
+/* DISCONNECT                                           */
+/* ---------------------------------------------------- */
+document.getElementById("disconnectBtn").onclick = () => {
+    if (listener) {
+        db.ref(`Users/${sessionId}/data`).off("value", listener);
+    }
+    sessionId = null;
+    lastData = null;
+    driversDiv.innerHTML = "";
+    dashboard.classList.add("hidden");
+    login.classList.remove("hidden");
+};
+</script>
 </body>
 </html>
