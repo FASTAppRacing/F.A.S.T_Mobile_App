@@ -171,7 +171,7 @@ document.getElementById("connectBtn").onclick = () => {
     const id = document.getElementById("sessionInput")
         .value.trim().toUpperCase();
 
-    if (id.length !== 4) return;
+    if (id.length !== 3) return;
 
     sessionId = id;
     localStorage.setItem("FAST_SESSION", id);
